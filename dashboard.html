@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CryptoVault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(30, 144, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo::before {
+            content: '₿';
+            font-size: 1.8rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-email {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
+        }
+
+        .container {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .greeting-section {
+            margin-bottom: 50px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .greeting-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .greeting-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .greeting-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .greeting-message {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+        .user-name-display {
+            font-size: 1.8rem;
+            color: #00d4ff;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .stats-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+        }
+
+        .welcome-text {
+            color: #b0b0b0;
+            margin-top: 15px;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .logout-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .logout-link a {
+            color: #00d4ff;
+            text-decoration: none;
+            cursor: pointer;
+            border-bottom: 1px dotted #00d4ff;
+            transition: all 0.3s ease;
+        }
+
+        .logout-link a:hover {
+            color: #ff6b6b;
+            border-bottom-color: #ff6b6b;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .navbar-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .greeting-card {
+                padding: 25px;
+            }
+
+            .greeting-title {
+                font-size: 2rem;
+            }
+
+            .user-name-display {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo">CryptoVault</div>
+        <div class="navbar-right">
+            <div class="user-info">
+                <div class="user-avatar" id="userInitial">U</div>
+                <div>
+                    <div style="font-weight: 600;" id="userNameNav">User</div>
+                    <div class="user-email" id="userEmailNav">user@example.com</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <!-- GREETING SECTION -->
+        <div class="greeting-section">
+            <div class="greeting-card">
+                <div class="greeting-icon">👋</div>
+                <div class="greeting-title">Welcome Back!</div>
+                <div class="greeting-message">Good to see you again</div>
+                <div class="user-name-display" id="userGreeting">Loading...</div>
+                <div class="welcome-text">
+                    You're all set to start investing in cryptocurrency. Monitor your portfolio and track your investments in real-time.
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS SECTION -->
+        <div class="stats-section">
+            <div class="stats-title">📊 Your Portfolio</div>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">$0.00</div>
+                    <div class="stat-label">Total Balance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Assets</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">+0%</div>
+                    <div class="stat-label">24h Change</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$0.00</div>
+                    <div class="stat-label">Total Gain</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD CARDS -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-icon">💰</div>
+                <div class="card-title">Portfolio Value</div>
+                <div class="card-value">$0.00</div>
+                <div class="card-description">Your total cryptocurrency holdings value</div>
+                <button class="btn-action">View Details</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Market Performance</div>
+                <div class="card-value">Live</div>
+                <div class="card-description">Real-time market data and trends</div>
+                <button class="btn-action">Check Market</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🔐</div>
+                <div class="card-title">Security Status</div>
+                <div class="card-value">Secure</div>
+                <div class="card-description">Your account is protected with bank-level encryption</div>
+                <button class="btn-action">Security Settings</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">💎</div>
+                <div class="card-title">Premium Features</div>
+                <div class="card-value">Available</div>
+                <div class="card-description">Unlock advanced trading tools and analytics</div>
+                <button class="btn-action">Upgrade Now</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">🎓</div>
+                <div class="card-title">Learning Hub</div>
+                <div class="card-value">Free</div>
+                <div class="card-description">Learn crypto basics and investment strategies</div>
+                <button class="btn-action">Start Learning</button>
+            </div>
+
+            <div class="card">
+                <div class="card-icon">⚙️</div>
+                <div class="card-title">Account Settings</div>
+                <div class="card-value">Manage</div>
+                <div class="card-description">Update your profile and preferences</div>
+                <button class="btn-action">Go to Settings</button>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyDBtM_t1l2wd_BHwbtUWa37HogdDgQew9I",
+  authDomain: "mine-project-daea5.firebaseapp.com",
+  projectId: "mine-project-daea5",
+  storageBucket: "mine-project-daea5.firebasestorage.app",
+  messagingSenderId: "677923336045",
+  appId: "1:677923336045:web:bfdab8d21f00f569ff7464",
+  measurementId: "G-5WCEHSZEV5"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// CHECK IF USER IS LOGGED IN AND DISPLAY INFO
+let dashboardAuthChecked = false;
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Get user name from localStorage or sessionStorage
+    const userName = localStorage.getItem(`user_${user.uid}_name`) || 
+                     sessionStorage.getItem('userName') || 
+                     user.displayName || 
+                     user.email.split('@')[0];
+    
+    // Display user greeting
+    document.getElementById('userGreeting').textContent = userName;
+    document.getElementById('userNameNav').textContent = userName;
+    document.getElementById('userEmailNav').textContent = user.email;
+    
+    // Set user avatar with first letter
+    const firstLetter = userName.charAt(0).toUpperCase();
+    document.getElementById('userInitial').textContent = firstLetter;
+    
+    console.log("✅ User logged in:", user.email);
+    dashboardAuthChecked = true;
+  } else {
+    // Only redirect if we've already checked and verified no user
+    if (dashboardAuthChecked) {
+      console.log("❌ No user logged in - Redirecting to login");
+      window.location.href = 'index.html';
+    }
+  }
+});
+
+// LOGOUT FUNCTION
+window.logout = function() {
+  signOut(auth).then(() => {
+    console.log("User logged out");
+    sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('userName');
+    window.location.href = 'index.html';
+  }).catch((error) => {
+    console.error("Logout error:", error);
+  });
+};
+</script>
+</body>
+</html>
