@@ -491,9 +491,15 @@ window.login = function() {
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      const userName = localStorage.getItem(`user_${user.uid}_name`) || user.displayName || email.split('@')[0];
+      const storedName = localStorage.getItem(`user_${user.uid}_name`);
+      const userName = storedName || user.displayName || email.split('@')[0];
       
-      console.log("User logged in:", email, "Name:", userName);
+      // Always update/store the name for future logins
+      if (!storedName && userName) {
+        localStorage.setItem(`user_${user.uid}_name`, userName);
+      }
+      
+      console.log("✅ User logged in:", email, "Name:", userName, "Stored:", storedName);
       
       // Store current user info in sessionStorage
       sessionStorage.setItem('currentUser', JSON.stringify({

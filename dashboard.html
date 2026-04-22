@@ -471,12 +471,18 @@ let dashboardAuthChecked = false;
 onAuthStateChanged(auth, (user) => {
   if (user) {
     // Get user name from localStorage or sessionStorage
-    const userName = localStorage.getItem(`user_${user.uid}_name`) || 
-                     sessionStorage.getItem('userName') || 
-                     user.displayName || 
-                     user.email.split('@')[0];
+    const storedName = localStorage.getItem(`user_${user.uid}_name`);
+    const sessionName = sessionStorage.getItem('userName');
+    const userName = storedName || sessionName || user.displayName || user.email.split('@')[0];
     
-    // Display user greeting
+    // Store the name back to localStorage if not already there
+    if (!storedName && userName !== user.email.split('@')[0]) {
+      localStorage.setItem(`user_${user.uid}_name`, userName);
+    }
+    
+    console.log("✅ User logged in:", user.email, "Stored Name:", storedName, "Final Name:", userName);
+    
+    // Display user greeting - show FULL NAME, not email
     document.getElementById('userGreeting').textContent = userName;
     document.getElementById('userNameNav').textContent = userName;
     document.getElementById('userEmailNav').textContent = user.email;
@@ -485,7 +491,6 @@ onAuthStateChanged(auth, (user) => {
     const firstLetter = userName.charAt(0).toUpperCase();
     document.getElementById('userInitial').textContent = firstLetter;
     
-    console.log("✅ User logged in:", user.email);
     dashboardAuthChecked = true;
   } else {
     // Only redirect if we've already checked and verified no user
