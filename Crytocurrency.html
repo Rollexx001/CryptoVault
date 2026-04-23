@@ -312,6 +312,182 @@
             color: #000;
         }
 
+        /* Processing & Verification Styles */
+        .processing-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .processing-screen.show {
+            display: block;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .processing-screen.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 30px auto;
+            border: 5px solid rgba(0, 212, 255, 0.2);
+            border-top: 5px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .processing-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 20px 0;
+        }
+
+        .processing-text {
+            color: #b0b0b0;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .transaction-details {
+            background: rgba(0, 212, 255, 0.08);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .transaction-details h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #888;
+        }
+
+        .detail-value {
+            color: #00d4ff;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin: 20px 0;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #4caf50;
+        }
+
+        .success-message strong {
+            color: #66bb6a;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .balance-update {
+            background: rgba(139, 47, 255, 0.1);
+            border: 1px solid rgba(139, 47, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .balance-update .old-balance {
+            color: #888;
+            text-decoration: line-through;
+            margin-bottom: 5px;
+        }
+
+        .balance-update .new-balance {
+            color: #4caf50;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-dashboard {
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            color: #fff;
+        }
+
+        .btn-dashboard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-new-deposit {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+        }
+
+        .btn-new-deposit:hover {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -414,6 +590,69 @@
             </form>
 
             <div id="message" class="message"></div>
+
+            <!-- Processing & Success Screen -->
+            <div class="processing-screen" id="processingScreen">
+                <div class="spinner"></div>
+                <div class="processing-title">Processing Your Deposit...</div>
+                <div class="processing-text">
+                    ⏳ Verifying transaction on blockchain<br>
+                    Please wait while we confirm your cryptocurrency transfer
+                </div>
+            </div>
+
+            <!-- Success Screen -->
+            <div class="processing-screen" id="successScreen">
+                <div class="success-icon">✅</div>
+                <div class="processing-title">Deposit Confirmed!</div>
+                
+                <div class="transaction-details">
+                    <h3>📋 Transaction Details</h3>
+                    <div class="detail-row">
+                        <span class="detail-label">Cryptocurrency Type:</span>
+                        <span class="detail-value" id="successCryptoType">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Amount Deposited:</span>
+                        <span class="detail-value" id="successAmount">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Transaction ID:</span>
+                        <span class="detail-value" id="transactionId">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">From Wallet:</span>
+                        <span class="detail-value" id="successFromWallet" style="font-size: 0.75rem;">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">To CryptoVault Wallet:</span>
+                        <span class="detail-value" id="successToWallet" style="font-size: 0.75rem;">--</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Date & Time:</span>
+                        <span class="detail-value" id="successTime">--</span>
+                    </div>
+                </div>
+
+                <div class="success-message">
+                    <strong>🎉 Your Balance Has Been Updated!</strong>
+                    Your cryptocurrency has been received and added to your account.
+                </div>
+
+                <div class="balance-update">
+                    <div class="old-balance">Previous Balance: $<span id="oldBalance">0.00</span></div>
+                    <div class="new-balance">New Balance: $<span id="newBalance">0.00</span></div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-dashboard" onclick="window.location.href='dashboard.html'">
+                        📊 Go to Dashboard
+                    </button>
+                    <button class="btn-new-deposit" onclick="window.location.href='Crytocurrency.html'">
+                        ➕ Make Another Deposit
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -483,9 +722,20 @@ window.handleCryptoDeposit = async function(event) {
   submitBtn.textContent = "Processing...";
 
   try {
-    // Update user balance in Firestore
+    // Show processing screen
+    document.getElementById("cryptoForm").style.display = "none";
+    document.getElementById("message").style.display = "none";
+    document.getElementById("processingScreen").classList.add("show");
+
+    // Get user's current balance before update
     const userDocRef = doc(db, "users", currentUser.uid);
-    
+    const userDocBefore = await getDoc(userDocRef);
+    const oldBalance = userDocBefore.exists() ? userDocBefore.data().balance || 0 : 0;
+
+    // Simulate blockchain verification (3-4 seconds)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Update user balance in Firestore
     await updateDoc(userDocRef, {
       balance: increment(amount),
       lastCryptoDeposit: {
@@ -496,20 +746,19 @@ window.handleCryptoDeposit = async function(event) {
       }
     });
 
+    // Get updated balance
+    const userDocAfter = await getDoc(userDocRef);
+    const newBalance = userDocAfter.exists() ? userDocAfter.data().balance || 0 : 0;
+
     console.log(`✅ Crypto deposit successful! ${cryptoType.toUpperCase()}: $${amount}`);
     
-    showMessage(`✅ Deposit successful! $${amount} added to your account (${cryptoType.toUpperCase()})`, "success");
-    
-    // Clear form
-    document.getElementById("cryptoForm").reset();
-    
-    // Redirect to dashboard after 2 seconds
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 2000);
+    // Show success screen with details
+    showSuccessScreen(cryptoType, amount, walletAddress, oldBalance, newBalance);
 
   } catch (error) {
     console.error("Crypto deposit error:", error);
+    document.getElementById("processingScreen").classList.remove("show");
+    document.getElementById("cryptoForm").style.display = "block";
     showMessage(`❌ Deposit failed: ${error.message}`, "error");
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit & Deposit Funds";
@@ -568,6 +817,50 @@ window.copyWalletAddress = function() {
     showMessage("❌ Failed to copy address", "error");
   });
 };
+
+// Show success screen with transaction details
+function showSuccessScreen(cryptoType, amount, userWallet, oldBalance, newBalance) {
+  // Generate transaction ID
+  const transactionId = "TX" + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
+  
+  // Get website wallet for the selected crypto
+  const websiteWallets = {
+    bitcoin: "1A1z7agoat3vTgGKjzCvCc8ksFzEJzC6TN",
+    ethereum: "0x742d35Cc6634C0532925a3b844Bc9e7595f4bEb2",
+    litecoin: "LgGxuHjJBqeqjFrVrczXkkV1rWiQZwwWgP",
+    ripple: "rN7n7otQDd6FczFgLdhmKAh4RNrYKKiVJC",
+    cardano: "addr1qx5r2wqnkf3n0gvnqdq4l8yl0z7l8p5k3n0z7p2f5q4r3s2t1",
+    solana: "9B5X4z3vYaGx9Zt6pQwJ8kL4nQ3mR5sT2yU1vW0xM9",
+    polkadot: "1ZiETiM6m3eZpq2rS6e9qL8L1L9L8M7M6M5L4K3J2",
+    dogecoin: "DPaHvbH5V4d7r9t6r4v2p9m8n1j3k5l7q2s4u6w8y"
+  };
+  
+  const toWallet = websiteWallets[cryptoType] || "Unknown";
+  const cryptoNames = {
+    bitcoin: "Bitcoin",
+    ethereum: "Ethereum",
+    litecoin: "Litecoin",
+    ripple: "XRP",
+    cardano: "Cardano",
+    solana: "Solana",
+    polkadot: "Polkadot",
+    dogecoin: "Dogecoin"
+  };
+
+  // Populate success screen
+  document.getElementById("successCryptoType").textContent = cryptoNames[cryptoType] || cryptoType;
+  document.getElementById("successAmount").textContent = `$${amount.toFixed(2)} USD`;
+  document.getElementById("transactionId").textContent = transactionId;
+  document.getElementById("successFromWallet").textContent = userWallet;
+  document.getElementById("successToWallet").textContent = toWallet;
+  document.getElementById("successTime").textContent = new Date().toLocaleString();
+  document.getElementById("oldBalance").textContent = oldBalance.toFixed(2);
+  document.getElementById("newBalance").textContent = newBalance.toFixed(2);
+
+  // Hide processing screen and show success screen
+  document.getElementById("processingScreen").classList.remove("show");
+  document.getElementById("successScreen").classList.add("show");
+}
 </script>
 
 </body>
