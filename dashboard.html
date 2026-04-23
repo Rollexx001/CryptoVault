@@ -119,6 +119,81 @@
             box-shadow: 0 6px 25px rgba(255, 107, 107, 0.5);
         }
 
+        .menu-btn {
+            background: transparent;
+            color: #00d4ff;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .menu-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: rgba(15, 12, 41, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            min-width: 200px;
+            z-index: 1001;
+            margin-top: 5px;
+        }
+
+        .dropdown-content.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: #e0e0e0;
+            text-decoration: none;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            padding-left: 25px;
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 10px 10px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+
         .container {
             padding: 40px;
             max-width: 1200px;
@@ -354,6 +429,21 @@
                     <div class="user-email" id="userEmailNav">user@example.com</div>
                 </div>
             </div>
+            
+            <!-- MENU DROPDOWN -->
+            <div class="menu-dropdown">
+                <button class="menu-btn" onclick="toggleMenu()">☰</button>
+                <div class="dropdown-content" id="menuDropdown">
+                    <a class="dropdown-item" href="#profile">👤 Profile</a>
+                    <a class="dropdown-item" href="#settings">⚙️ Settings</a>
+                    <a class="dropdown-item" href="#notifications">🔔 Notifications</a>
+                    <a class="dropdown-item" href="#security">🔐 Security</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#help">❓ Help & Support</a>
+                    <a class="dropdown-item" href="#about">ℹ️ About</a>
+                </div>
+            </div>
+            
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
     </div>
@@ -512,6 +602,33 @@ window.logout = function() {
     console.error("Logout error:", error);
   });
 };
+
+// MENU TOGGLE FUNCTION
+window.toggleMenu = function() {
+  const menuDropdown = document.getElementById('menuDropdown');
+  menuDropdown.classList.toggle('show');
+};
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+  const menuDropdown = document.getElementById('menuDropdown');
+  const menuBtn = event.target.closest('.menu-btn');
+  const menuDropdownElement = event.target.closest('.menu-dropdown');
+  
+  if (!menuBtn && !menuDropdownElement) {
+    menuDropdown.classList.remove('show');
+  }
+});
+
+// Handle menu item clicks
+document.querySelectorAll('.dropdown-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const href = this.getAttribute('href');
+    console.log('Menu item clicked:', href);
+    // Close menu after clicking
+    document.getElementById('menuDropdown').classList.remove('show');
+  });
+});
 </script>
 </body>
 </html>
