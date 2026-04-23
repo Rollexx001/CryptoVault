@@ -352,6 +352,12 @@ import {
   onAuthStateChanged,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -366,6 +372,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 function showMessage(text, type = 'success') {
   const messageEl = document.getElementById("message");
@@ -439,14 +446,27 @@ window.signup = function() {
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       // Update user profile with display name
-      return userCredential.user.getIdToken().then(() => {
+      return userCredential.user.getIdToken().then(async () => {
         // Store user name in Firestore or use Firebase displayName
         const user = userCredential.user;
         console.log('User created:', user.email);
         
-        // Store name in localStorage temporarily
+        // Store name in localStorage
         localStorage.setItem(`user_${user.uid}_name`, name);
         localStorage.setItem(`user_${user.uid}_email`, email);
+        
+        // Create user document in Firestore with initial balance of 0
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            name: name,
+            email: user.email,
+            balance: 0,
+            createdAt: new Date().toISOString()
+          });
+          console.log("✅ User document created in Firestore");
+        } catch (error) {
+          console.error("Error creating user document:", error);
+        }
         
         showMessage('✅ Account created successfully!', 'success');
         setTimeout(() => {

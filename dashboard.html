@@ -469,7 +469,7 @@
             <div class="stats-title">📊 Your Portfolio</div>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-value">$0.00</div>
+                    <div class="stat-value" id="userBalance">$0.00</div>
                     <div class="stat-label">Total Balance</div>
                 </div>
                 <div class="stat-item">
@@ -542,6 +542,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -556,6 +557,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // CHECK IF USER IS LOGGED IN AND DISPLAY INFO
 let dashboardAuthChecked = false;
@@ -581,6 +583,21 @@ onAuthStateChanged(auth, (user) => {
     // Set user avatar with first letter
     const firstLetter = userName.charAt(0).toUpperCase();
     document.getElementById('userInitial').textContent = firstLetter;
+    
+    // Fetch user balance from Firestore in real-time
+    const userDocRef = doc(db, "users", user.uid);
+    onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const balance = userData.balance || 0;
+        document.getElementById('userBalance').textContent = `$${balance.toFixed(2)}`;
+        console.log("💰 User balance:", balance);
+      } else {
+        console.log("No user document found, creating one...");
+        // If document doesn't exist, set initial balance
+        document.getElementById('userBalance').textContent = "$0.00";
+      }
+    });
     
     dashboardAuthChecked = true;
   } else {
