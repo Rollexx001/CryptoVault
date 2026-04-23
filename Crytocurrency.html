@@ -249,6 +249,69 @@
             color: #f44336;
         }
 
+        .website-wallet-box {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+            display: none;
+        }
+
+        .website-wallet-box.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .wallet-label {
+            font-size: 0.85rem;
+            color: #00d4ff;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .wallet-address {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 5px;
+            padding: 10px 12px;
+            color: #fff;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            background: rgba(0, 212, 255, 0.2);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #00d4ff;
+            color: #000;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -305,7 +368,7 @@
             <form id="cryptoForm" onsubmit="handleCryptoDeposit(event)">
                 <div class="form-group">
                     <label for="cryptoType">Cryptocurrency Type *</label>
-                    <select id="cryptoType" required>
+                    <select id="cryptoType" required onchange="updateWebsiteWallet()">
                         <option value="">-- Select Cryptocurrency --</option>
                         <option value="bitcoin">Bitcoin (BTC)</option>
                         <option value="ethereum">Ethereum (ETH)</option>
@@ -316,6 +379,13 @@
                         <option value="polkadot">Polkadot (DOT)</option>
                         <option value="dogecoin">Dogecoin (DOGE)</option>
                     </select>
+                </div>
+
+                <!-- Website Wallet Address Display -->
+                <div class="website-wallet-box" id="websiteWalletBox">
+                    <label class="wallet-label">💼 Send Crypto To Our Wallet Address:</label>
+                    <div class="wallet-address" id="websiteWalletAddress">--</div>
+                    <button type="button" class="copy-btn" onclick="copyWalletAddress()">📋 Copy Address</button>
                 </div>
 
                 <div class="form-group">
@@ -455,6 +525,49 @@ function showMessage(text, type = 'success') {
     messageEl.classList.remove('show');
   }, 5000);
 }
+
+// Website wallet addresses for each cryptocurrency
+const websiteWallets = {
+  bitcoin: "1A1z7agoat3vTgGKjzCvCc8ksFzEJzC6TN",
+  ethereum: "0x742d35Cc6634C0532925a3b844Bc9e7595f4bEb2",
+  litecoin: "LgGxuHjJBqeqjFrVrczXkkV1rWiQZwwWgP",
+  ripple: "rN7n7otQDd6FczFgLdhmKAh4RNrYKKiVJC",
+  cardano: "addr1qx5r2wqnkf3n0gvnqdq4l8yl0z7l8p5k3n0z7p2f5q4r3s2t1",
+  solana: "9B5X4z3vYaGx9Zt6pQwJ8kL4nQ3mR5sT2yU1vW0xM9",
+  polkadot: "1ZiETiM6m3eZpq2rS6e9qL8L1L9L8M7M6M5L4K3J2",
+  dogecoin: "DPaHvbH5V4d7r9t6r4v2p9m8n1j3k5l7q2s4u6w8y"
+};
+
+// Update website wallet display when cryptocurrency is selected
+window.updateWebsiteWallet = function() {
+  const cryptoType = document.getElementById("cryptoType").value;
+  const websiteWalletBox = document.getElementById("websiteWalletBox");
+  const websiteWalletAddress = document.getElementById("websiteWalletAddress");
+
+  if (cryptoType && websiteWallets[cryptoType]) {
+    websiteWalletAddress.textContent = websiteWallets[cryptoType];
+    websiteWalletBox.classList.add('show');
+  } else {
+    websiteWalletBox.classList.remove('show');
+  }
+};
+
+// Copy wallet address to clipboard
+window.copyWalletAddress = function() {
+  const walletAddress = document.getElementById("websiteWalletAddress").textContent;
+  
+  if (walletAddress === "--") {
+    showMessage("⚠️ Please select a cryptocurrency first", "error");
+    return;
+  }
+
+  navigator.clipboard.writeText(walletAddress).then(() => {
+    showMessage("✅ Wallet address copied to clipboard!", "success");
+  }).catch((err) => {
+    console.error("Failed to copy:", err);
+    showMessage("❌ Failed to copy address", "error");
+  });
+};
 </script>
 
 </body>
