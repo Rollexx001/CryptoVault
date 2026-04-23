@@ -350,6 +350,10 @@
             text-align: center;
         }
 
+        .stat-item.balance-box {
+            position: relative;
+        }
+
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
@@ -361,6 +365,34 @@
         .stat-value.updating {
             color: #4caf50;
             text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            transform: scale(1.05);
+        }
+
+        .refresh-balance-btn {
+            background: transparent;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .refresh-balance-btn:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .refresh-balance-btn.loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .stat-label {
@@ -474,8 +506,11 @@
         <div class="stats-section">
             <div class="stats-title">📊 Your Portfolio</div>
             <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="userBalance">$0.00</div>
+                <div class="stat-item balance-box">
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <div class="stat-value" id="userBalance">$0.00</div>
+                        <button class="refresh-balance-btn" onclick="manualRefreshBalance()" title="Refresh balance">🔄</button>
+                    </div>
                     <div class="stat-label">Total Balance</div>
                 </div>
                 <div class="stat-item">
@@ -594,36 +629,57 @@ onAuthStateChanged(auth, (user) => {
     const userDocRef = doc(db, "users", user.uid);
     
     console.log(`🔄 Setting up real-time balance listener for user: ${user.uid}`);
+    console.log(`📍 Firestore path: users/${user.uid}`);
     
     let unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
-        const balance = userData.balance || 0;
+        const balance = userData.balance !== undefined ? userData.balance : 0;
         
         // Update the balance display
         const balanceElement = document.getElementById('userBalance');
+        const previousBalance = parseFloat(balanceElement.textContent.replace('$', ''));
         balanceElement.textContent = `$${balance.toFixed(2)}`;
         
-        console.log(`💰 User balance updated: $${balance.toFixed(2)}`);
+        console.log(`💰 Balance listener triggered`);
+        console.log(`   Previous: $${previousBalance.toFixed(2)}`);
+        console.log(`   Current:  $${balance.toFixed(2)}`);
+        console.log(`   Changed:  ${balance !== previousBalance ? '✅ YES' : '❌ NO'}`);
         console.log("📄 Full user data:", userData);
         
-        // Add animation when balance updates
-        balanceElement.classList.add('updating');
-        setTimeout(() => {
+        // Add animation when balance changes
+        if (balance !== previousBalance) {
           balanceElement.classList.remove('updating');
-        }, 1000);
+          // Force reflow to restart animation
+          void balanceElement.offsetWidth;
+          balanceElement.classList.add('updating');
+          setTimeout(() => {
+            balanceElement.classList.remove('updating');
+          }, 1500);
+          console.log(`✨ Animation triggered for balance change`);
+        }
         
       } else {
-        console.warn("⚠️ No user document found!");
-        console.log("User UID:", user.uid);
-        console.log("Collection path: users/", user.uid);
+        console.warn("⚠️ User document not found!");
+        console.log(`   User UID: ${user.uid}`);
+        console.log(`   Expected path: users/${user.uid}`);
+        console.log(`   Check Firestore to ensure document exists`);
         document.getElementById('userBalance').textContent = "$0.00";
       }
     }, (error) => {
-      console.error("❌ Error listening to balance updates:", error);
-      console.error("Error code:", error.code);
-      console.error("Error message:", error.message);
-      document.getElementById('userBalance').textContent = "$0.00";
+      console.error("❌ Error in balance listener:", error);
+      console.error(`   Error code: ${error.code}`);
+      console.error(`   Error message: ${error.message}`);
+      
+      // Attempt to fetch manually if listener fails
+      console.log("🔄 Attempting manual fetch...");
+      getDoc(userDocRef).then((docSnap) => {
+        if (docSnap.exists()) {
+          const balance = docSnap.data().balance || 0;
+          document.getElementById('userBalance').textContent = `$${balance.toFixed(2)}`;
+          console.log(`✅ Manual fetch successful: $${balance.toFixed(2)}`);
+        }
+      });
     });
     
     // Store unsubscribe function to prevent memory leaks
@@ -677,6 +733,50 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
     document.getElementById('menuDropdown').classList.remove('show');
   });
 });
+
+// MANUAL REFRESH BALANCE FUNCTION
+window.manualRefreshBalance = async function() {
+  const auth = getAuth(app);
+  const user = auth.currentUser;
+  
+  if (!user) {
+    console.warn("⚠️ No user logged in");
+    return;
+  }
+  
+  const refreshBtn = document.querySelector('.refresh-balance-btn');
+  refreshBtn.classList.add('loading');
+  
+  try {
+    console.log(`🔄 Manually refreshing balance for user: ${user.uid}`);
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const balance = userData.balance || 0;
+      
+      const balanceElement = document.getElementById('userBalance');
+      balanceElement.textContent = `$${balance.toFixed(2)}`;
+      
+      console.log(`✅ Balance refreshed: $${balance.toFixed(2)}`);
+      
+      // Add visual feedback
+      balanceElement.classList.add('updating');
+      setTimeout(() => {
+        balanceElement.classList.remove('updating');
+        refreshBtn.classList.remove('loading');
+      }, 1000);
+    } else {
+      console.warn("⚠️ User document not found");
+      refreshBtn.classList.remove('loading');
+    }
+  } catch (error) {
+    console.error("❌ Error refreshing balance:", error);
+    refreshBtn.classList.remove('loading');
+  }
+};
 </script>
 </body>
 </html>
