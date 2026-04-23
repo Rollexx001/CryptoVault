@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit - CryptoVault</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
+            height: 100vh;
+            width: 100%;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(30, 144, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .logo::before {
+            content: '₿';
+            font-size: 1.8rem;
+        }
+
+        .navbar-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .container {
+            padding: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .deposit-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .deposit-icon {
+            font-size: 5rem;
+            margin-bottom: 30px;
+        }
+
+        .deposit-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #00d4ff, #8b2fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        .deposit-subtitle {
+            font-size: 1.2rem;
+            color: #e0e0e0;
+            margin-bottom: 40px;
+        }
+
+        .deposit-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .method-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .method-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 12px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .method-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .method-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .method-description {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-bottom: 20px;
+        }
+
+        .method-btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .method-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .deposit-info {
+            background: rgba(0, 212, 255, 0.05);
+            border-left: 3px solid #00d4ff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 40px;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        .deposit-info strong {
+            color: #00d4ff;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .deposit-card {
+                padding: 30px;
+            }
+
+            .deposit-title {
+                font-size: 2rem;
+            }
+
+            .deposit-icon {
+                font-size: 3rem;
+            }
+
+            .deposit-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="logo" onclick="window.location.href='dashboard.html'">CryptoVault</div>
+        <div class="navbar-right">
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="deposit-card">
+            <div class="deposit-icon">💳</div>
+            <h1 class="deposit-title">Add Funds to Your Account</h1>
+            <p class="deposit-subtitle">Choose a deposit method to start investing</p>
+
+            <div class="deposit-methods">
+                <div class="method-card">
+                    <div class="method-icon">🏦</div>
+                    <div class="method-name">Bank Transfer</div>
+                    <p class="method-description">Direct transfer from your bank account</p>
+                    <button class="method-btn" onclick="alert('Bank Transfer feature coming soon!')">Select Method</button>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-icon">💳</div>
+                    <div class="method-name">Credit/Debit Card</div>
+                    <p class="method-description">Instant deposit via credit or debit card</p>
+                    <button class="method-btn" onclick="alert('Credit Card feature coming soon!')">Select Method</button>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-icon">🪙</div>
+                    <div class="method-name">Cryptocurrency</div>
+                    <p class="method-description">Send crypto directly to your wallet</p>
+                    <button class="method-btn" onclick="alert('Crypto Transfer feature coming soon!')">Select Method</button>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-icon">📱</div>
+                    <div class="method-name">Digital Wallet</div>
+                    <p class="method-description">PayPal, Apple Pay, Google Pay</p>
+                    <button class="method-btn" onclick="alert('Digital Wallet feature coming soon!')">Select Method</button>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-icon">💸</div>
+                    <div class="method-name">Wire Transfer</div>
+                    <p class="method-description">Secure international wire transfer</p>
+                    <button class="method-btn" onclick="alert('Wire Transfer feature coming soon!')">Select Method</button>
+                </div>
+
+                <div class="method-card">
+                    <div class="method-icon">🎁</div>
+                    <div class="method-name">Gift Card</div>
+                    <p class="method-description">Redeem gift cards for balance</p>
+                    <button class="method-btn" onclick="alert('Gift Card feature coming soon!')">Select Method</button>
+                </div>
+            </div>
+
+            <div class="deposit-info">
+                <strong>ℹ️ Security Notice:</strong> All deposits are protected with bank-level encryption. Your financial information is never stored on our servers. Minimum deposit amount is $10 USD or equivalent.
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
