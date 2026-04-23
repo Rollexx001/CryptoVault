@@ -659,7 +659,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, updateDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, updateDoc, increment, getDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -727,36 +727,74 @@ window.handleCryptoDeposit = async function(event) {
     document.getElementById("message").style.display = "none";
     document.getElementById("processingScreen").classList.add("show");
 
+    // Validate amount is a valid number
+    if (isNaN(amount) || amount <= 0) {
+      throw new Error("Invalid deposit amount");
+    }
+
     // Get user's current balance before update
     const userDocRef = doc(db, "users", currentUser.uid);
     const userDocBefore = await getDoc(userDocRef);
-    const oldBalance = userDocBefore.exists() ? userDocBefore.data().balance || 0 : 0;
+    
+    if (!userDocBefore.exists()) {
+      throw new Error("User document not found. Please contact support.");
+    }
+
+    const oldBalance = userDocBefore.data().balance || 0;
 
     // Simulate blockchain verification (3-4 seconds)
     await new Promise(resolve => setTimeout(resolve, 3000));
 
-    // Update user balance in Firestore
+    // Generate transaction ID
+    const transactionId = "TX" + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+    // Update user balance in Firestore with increment() - ATOMIC OPERATION
+    console.log(`📝 Starting balance update for user ${currentUser.uid}`);
+    console.log(`   Old Balance: $${oldBalance.toFixed(2)}`);
+    console.log(`   Amount to add: $${amount.toFixed(2)}`);
+
     await updateDoc(userDocRef, {
+      // Using increment() for atomic, safe balance update
       balance: increment(amount),
+      
+      // Store transaction details
       lastCryptoDeposit: {
         type: cryptoType,
         amount: amount,
         walletAddress: walletAddress,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+        transactionId: transactionId,
+        status: "completed"
+      },
+
+      // Track all deposits (for history)
+      depositHistory: arrayUnion({
+        transactionId: transactionId,
+        type: cryptoType,
+        amount: amount,
+        walletAddress: walletAddress,
+        timestamp: new Date().toISOString(),
+        status: "completed"
+      }),
+
+      // Update last transaction timestamp
+      lastTransactionTime: new Date().toISOString()
     });
 
-    // Get updated balance
+    console.log(`✅ Firestore updated successfully with increment()`);
+
+    // Get updated balance from Firestore
     const userDocAfter = await getDoc(userDocRef);
     const newBalance = userDocAfter.exists() ? userDocAfter.data().balance || 0 : 0;
 
+    console.log(`   New Balance: $${newBalance.toFixed(2)}`);
     console.log(`✅ Crypto deposit successful! ${cryptoType.toUpperCase()}: $${amount}`);
     
     // Show success screen with details
-    showSuccessScreen(cryptoType, amount, walletAddress, oldBalance, newBalance);
+    showSuccessScreen(cryptoType, amount, walletAddress, oldBalance, newBalance, transactionId);
 
   } catch (error) {
-    console.error("Crypto deposit error:", error);
+    console.error("❌ Crypto deposit error:", error);
     document.getElementById("processingScreen").classList.remove("show");
     document.getElementById("cryptoForm").style.display = "block";
     showMessage(`❌ Deposit failed: ${error.message}`, "error");
@@ -819,9 +857,7 @@ window.copyWalletAddress = function() {
 };
 
 // Show success screen with transaction details
-function showSuccessScreen(cryptoType, amount, userWallet, oldBalance, newBalance) {
-  // Generate transaction ID
-  const transactionId = "TX" + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
+function showSuccessScreen(cryptoType, amount, userWallet, oldBalance, newBalance, transactionId) {
   
   // Get website wallet for the selected crypto
   const websiteWallets = {
