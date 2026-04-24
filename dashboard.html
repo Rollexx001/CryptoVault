@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - CryptoVault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -17,7 +18,10 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            letter-spacing: -0.3px;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e) !important;
             height: 100vh;
             width: 100%;
@@ -53,8 +57,10 @@
         }
 
         .logo {
+            font-family: 'Poppins', sans-serif;
             font-size: 1.8rem;
-            font-weight: bold;
+            font-weight: 700;
+            letter-spacing: -0.8px;
             background: linear-gradient(135deg, #00d4ff, #8b2fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -94,18 +100,24 @@
         }
 
         .user-email {
-            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
             color: #b0b0b0;
+            font-weight: 400;
+            letter-spacing: -0.2px;
         }
 
         button {
             padding: 10px 20px;
             border: none;
             border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             outline: none;
+            font-size: 0.95rem;
+            letter-spacing: -0.2px;
         }
 
         .btn-logout {
@@ -171,7 +183,10 @@
             text-align: left;
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: -0.2px;
         }
 
         .dropdown-item:hover {
@@ -232,8 +247,10 @@
         }
 
         .greeting-title {
-            font-size: 2.5rem;
-            font-weight: bold;
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -1.2px;
             background: linear-gradient(135deg, #00d4ff, #8b2fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -242,15 +259,20 @@
         }
 
         .greeting-message {
-            font-size: 1.2rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
             color: #e0e0e0;
             margin-bottom: 10px;
+            font-weight: 400;
+            letter-spacing: -0.2px;
         }
 
         .user-name-display {
-            font-size: 1.8rem;
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
             color: #00d4ff;
-            font-weight: bold;
+            font-weight: 700;
+            letter-spacing: -0.8px;
             margin: 20px 0;
         }
 
@@ -284,15 +306,19 @@
         }
 
         .card-title {
+            font-family: 'Poppins', sans-serif;
             font-size: 1.3rem;
-            font-weight: bold;
+            font-weight: 700;
             margin-bottom: 10px;
             color: #fff;
+            letter-spacing: -0.4px;
         }
 
         .card-value {
+            font-family: 'Poppins', sans-serif;
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: 700;
+            letter-spacing: -0.6px;
             background: linear-gradient(135deg, #00d4ff, #8b2fff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -301,9 +327,13 @@
         }
 
         .card-description {
+            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
             color: #b0b0b0;
             margin-bottom: 20px;
+            font-weight: 400;
+            line-height: 1.5;
+            letter-spacing: -0.2px;
         }
 
         .btn-action {
@@ -313,9 +343,12 @@
             border-radius: 8px;
             border: none;
             cursor: pointer;
+            font-family: 'Poppins', sans-serif;
             font-weight: 600;
+            font-size: 0.9rem;
             transition: all 0.3s ease;
             width: 100%;
+            letter-spacing: -0.2px;
         }
 
         .btn-action:hover {
@@ -334,10 +367,12 @@
         }
 
         .stats-title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
             margin-bottom: 20px;
             color: #fff;
+            letter-spacing: -0.6px;
         }
 
         .stats-grid {
@@ -355,11 +390,13 @@
         }
 
         .stat-value {
+            font-family: 'Poppins', sans-serif;
             font-size: 2rem;
-            font-weight: bold;
+            font-weight: 700;
             color: #00d4ff;
             margin-bottom: 5px;
             transition: all 0.3s ease;
+            letter-spacing: -0.6px;
         }
 
         .stat-value.updating {
@@ -396,15 +433,22 @@
         }
 
         .stat-label {
-            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
             color: #b0b0b0;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         .welcome-text {
+            font-family: 'Inter', sans-serif;
             color: #b0b0b0;
             margin-top: 15px;
-            line-height: 1.6;
+            line-height: 1.7;
             font-size: 0.95rem;
+            font-weight: 400;
+            letter-spacing: -0.2px;
         }
 
         .logout-link {
