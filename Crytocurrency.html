@@ -749,10 +749,16 @@ window.handleCryptoDeposit = async function(event) {
     const transactionId = "TX" + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
 
     // Update user balance in Firestore with increment() - ATOMIC OPERATION
-    console.log(`📝 Starting balance update for user ${currentUser.uid}`);
+    console.log(`\n📝 === CRYPTO DEPOSIT START ===`);
+    console.log(`   User UID: ${currentUser.uid}`);
+    console.log(`   Firestore Path: users/${currentUser.uid}`);
+    console.log(`   Crypto Type: ${cryptoType}`);
     console.log(`   Old Balance: $${oldBalance.toFixed(2)}`);
     console.log(`   Amount to add: $${amount.toFixed(2)}`);
+    console.log(`   Transaction ID: ${transactionId}`);
+    console.log(`   Wallet From: ${walletAddress}`);
 
+    console.log(`   Executing increment()...`);
     await updateDoc(userDocRef, {
       // Using increment() for atomic, safe balance update
       balance: increment(amount),
@@ -783,11 +789,28 @@ window.handleCryptoDeposit = async function(event) {
 
     console.log(`✅ Firestore updated successfully with increment()`);
 
-    // Get updated balance from Firestore
-    const userDocAfter = await getDoc(userDocRef);
-    const newBalance = userDocAfter.exists() ? userDocAfter.data().balance || 0 : 0;
+    // Get updated balance from Firestore with retry logic
+    let retries = 5;
+    let newBalance = oldBalance;
+    
+    while (retries > 0) {
+      const userDocAfter = await getDoc(userDocRef);
+      newBalance = userDocAfter.exists() ? userDocAfter.data().balance || 0 : 0;
+      
+      if (newBalance === oldBalance + amount || newBalance > oldBalance) {
+        console.log(`✅ Balance verified: $${newBalance.toFixed(2)}`);
+        break;
+      }
+      retries--;
+      if (retries > 0) {
+        console.log(`   Retry ${6 - retries}: Waiting for Firestore sync...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
 
     console.log(`   New Balance: $${newBalance.toFixed(2)}`);
+    console.log(`   Balance Change: +$${(newBalance - oldBalance).toFixed(2)}`);
+    console.log(`📝 === CRYPTO DEPOSIT COMPLETE ===\n`);
     console.log(`✅ Crypto deposit successful! ${cryptoType.toUpperCase()}: $${amount}`);
     
     // Show success screen with details
@@ -795,9 +818,19 @@ window.handleCryptoDeposit = async function(event) {
 
   } catch (error) {
     console.error("❌ Crypto deposit error:", error);
+    console.error(`   Error Code: ${error.code}`);
+    console.error(`   Error Message: ${error.message}`);
     document.getElementById("processingScreen").classList.remove("show");
     document.getElementById("cryptoForm").style.display = "block";
-    showMessage(`❌ Deposit failed: ${error.message}`, "error");
+    
+    let errorMsg = error.message;
+    if (error.code === 'permission-denied') {
+      errorMsg = "Permission denied. Check Firestore security rules.";
+    } else if (error.code === 'not-found') {
+      errorMsg = "User document not found in Firestore.";
+    }
+    
+    showMessage(`❌ Deposit failed: ${errorMsg}`, "error");
     submitBtn.disabled = false;
     submitBtn.textContent = "Submit & Deposit Funds";
   }

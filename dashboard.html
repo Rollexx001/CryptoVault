@@ -600,6 +600,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Global balance tracker
+let currentBalance = 0;
+let balanceCheckInterval = null;
+
 // CHECK IF USER IS LOGGED IN AND DISPLAY INFO
 let dashboardAuthChecked = false;
 onAuthStateChanged(auth, (user) => {
@@ -631,24 +635,38 @@ onAuthStateChanged(auth, (user) => {
     console.log(`🔄 Setting up real-time balance listener for user: ${user.uid}`);
     console.log(`📍 Firestore path: users/${user.uid}`);
     
+    // Initial fetch
+    getDoc(userDocRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        const balance = docSnap.data().balance || 0;
+        currentBalance = balance;
+        document.getElementById('userBalance').textContent = `$${balance.toFixed(2)}`;
+        console.log(`📄 Initial balance loaded: $${balance.toFixed(2)}`);
+      }
+    }).catch((error) => {
+      console.error("❌ Error loading initial balance:", error);
+    });
+    
+    // Set up real-time listener
     let unsubscribe = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         const balance = userData.balance !== undefined ? userData.balance : 0;
         
+        console.log(`💰 Balance listener triggered`);
+        console.log(`   Previous: $${currentBalance.toFixed(2)}`);
+        console.log(`   Current:  $${balance.toFixed(2)}`);
+        
         // Update the balance display
         const balanceElement = document.getElementById('userBalance');
-        const previousBalance = parseFloat(balanceElement.textContent.replace('$', ''));
         balanceElement.textContent = `$${balance.toFixed(2)}`;
         
-        console.log(`💰 Balance listener triggered`);
-        console.log(`   Previous: $${previousBalance.toFixed(2)}`);
-        console.log(`   Current:  $${balance.toFixed(2)}`);
-        console.log(`   Changed:  ${balance !== previousBalance ? '✅ YES' : '❌ NO'}`);
+        console.log(`   Changed:  ${balance !== currentBalance ? '✅ YES' : '❌ NO'}`);
         console.log("📄 Full user data:", userData);
         
         // Add animation when balance changes
-        if (balance !== previousBalance) {
+        if (balance !== currentBalance) {
+          currentBalance = balance;
           balanceElement.classList.remove('updating');
           // Force reflow to restart animation
           void balanceElement.offsetWidth;
@@ -670,17 +688,34 @@ onAuthStateChanged(auth, (user) => {
       console.error("❌ Error in balance listener:", error);
       console.error(`   Error code: ${error.code}`);
       console.error(`   Error message: ${error.message}`);
-      
-      // Attempt to fetch manually if listener fails
-      console.log("🔄 Attempting manual fetch...");
-      getDoc(userDocRef).then((docSnap) => {
+    });
+    
+    // Backup: Check balance every 3 seconds as well (in case listener fails)
+    if (balanceCheckInterval) clearInterval(balanceCheckInterval);
+    balanceCheckInterval = setInterval(async () => {
+      try {
+        const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
           const balance = docSnap.data().balance || 0;
-          document.getElementById('userBalance').textContent = `$${balance.toFixed(2)}`;
-          console.log(`✅ Manual fetch successful: $${balance.toFixed(2)}`);
+          if (balance !== currentBalance) {
+            console.log(`🔄 Periodic check detected balance change: $${currentBalance.toFixed(2)} → $${balance.toFixed(2)}`);
+            const balanceElement = document.getElementById('userBalance');
+            balanceElement.textContent = `$${balance.toFixed(2)}`;
+            currentBalance = balance;
+            
+            // Add animation
+            balanceElement.classList.remove('updating');
+            void balanceElement.offsetWidth;
+            balanceElement.classList.add('updating');
+            setTimeout(() => {
+              balanceElement.classList.remove('updating');
+            }, 1500);
+          }
         }
-      });
-    });
+      } catch (error) {
+        console.error("Error in periodic balance check:", error);
+      }
+    }, 3000);
     
     // Store unsubscribe function to prevent memory leaks
     window.balanceUnsubscribe = unsubscribe;
@@ -736,11 +771,11 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
 
 // MANUAL REFRESH BALANCE FUNCTION
 window.manualRefreshBalance = async function() {
-  const auth = getAuth(app);
   const user = auth.currentUser;
   
   if (!user) {
     console.warn("⚠️ No user logged in");
+    alert("❌ You must be logged in to refresh balance");
     return;
   }
   
@@ -758,22 +793,35 @@ window.manualRefreshBalance = async function() {
       const balance = userData.balance || 0;
       
       const balanceElement = document.getElementById('userBalance');
+      const oldBalance = currentBalance;
       balanceElement.textContent = `$${balance.toFixed(2)}`;
+      currentBalance = balance;
       
-      console.log(`✅ Balance refreshed: $${balance.toFixed(2)}`);
+      console.log(`✅ Balance refreshed: $${oldBalance.toFixed(2)} → $${balance.toFixed(2)}`);
+      console.log("📄 Full user data:", userData);
       
-      // Add visual feedback
+      // Add visual feedback - always animate refresh
+      balanceElement.classList.remove('updating');
+      void balanceElement.offsetWidth;
       balanceElement.classList.add('updating');
       setTimeout(() => {
         balanceElement.classList.remove('updating');
         refreshBtn.classList.remove('loading');
-      }, 1000);
+      }, 1500);
+      
+      if (balance !== oldBalance) {
+        console.log(`✨ Balance changed from $${oldBalance.toFixed(2)} to $${balance.toFixed(2)}`);
+      }
     } else {
       console.warn("⚠️ User document not found");
+      alert("❌ User document not found. Please contact support.");
       refreshBtn.classList.remove('loading');
     }
   } catch (error) {
     console.error("❌ Error refreshing balance:", error);
+    console.error(`   Error code: ${error.code}`);
+    console.error(`   Error message: ${error.message}`);
+    alert(`❌ Error refreshing balance: ${error.message}`);
     refreshBtn.classList.remove('loading');
   }
 };

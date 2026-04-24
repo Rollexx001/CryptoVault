@@ -358,34 +358,68 @@ window.depositFunds = async function(amount) {
     const userDoc = await getDoc(userDocRef);
     
     if (!userDoc.exists()) {
-      alert('❌ User document not found. Please contact support.');
+      console.error('❌ User document not found at path:', `users/${user.uid}`);
+      alert('❌ User document not found. Please logout and login again.');
       return;
     }
 
-    console.log(`📝 Updating balance for user: ${user.uid}`);
+    const oldBalance = userDoc.data().balance || 0;
+    console.log(`\n📝 === DEPOSIT TRANSACTION START ===`);
+    console.log(`   User UID: ${user.uid}`);
+    console.log(`   Firestore Path: users/${user.uid}`);
+    console.log(`   Old Balance: $${oldBalance.toFixed(2)}`);
     console.log(`   Amount to add: $${parseFloat(amount).toFixed(2)}`);
     
     // Update user balance in Firestore using increment()
+    console.log(`   Executing increment()...`);
     await updateDoc(userDocRef, {
       balance: increment(parseFloat(amount))
     });
     
     console.log(`✅ Balance updated successfully!`);
     
-    // Get updated balance to confirm
-    const updatedDoc = await getDoc(userDocRef);
-    const newBalance = updatedDoc.data().balance || 0;
+    // Get updated balance to confirm (with retry logic)
+    let retries = 3;
+    let newBalance = oldBalance;
+    
+    while (retries > 0) {
+      const updatedDoc = await getDoc(userDocRef);
+      newBalance = updatedDoc.data().balance || 0;
+      
+      if (newBalance === oldBalance + parseFloat(amount) || newBalance > oldBalance) {
+        break;
+      }
+      retries--;
+      if (retries > 0) {
+        console.log(`   Retry ${4 - retries}: Waiting for Firestore to sync...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
     console.log(`   New Balance: $${newBalance.toFixed(2)}`);
+    console.log(`   Balance Change: $${(newBalance - oldBalance).toFixed(2)}`);
+    console.log(`📝 === DEPOSIT TRANSACTION COMPLETE ===\n`);
     
     alert(`✅ Deposit successful! $${parseFloat(amount).toFixed(2)} added to your account.\nNew Balance: $${newBalance.toFixed(2)}`);
     
-    // Redirect back to dashboard after 1 second
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 1000);
+    // Give listener time to update before redirecting
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Redirect back to dashboard
+    window.location.href = 'dashboard.html';
   } catch (error) {
     console.error("❌ Deposit error:", error);
-    alert(`❌ Deposit failed: ${error.message}`);
+    console.error(`   Error Code: ${error.code}`);
+    console.error(`   Error Message: ${error.message}`);
+    
+    let errorMsg = error.message;
+    if (error.code === 'permission-denied') {
+      errorMsg = "Permission denied. Check Firestore security rules.";
+    } else if (error.code === 'not-found') {
+      errorMsg = "User document not found in Firestore.";
+    }
+    
+    alert(`❌ Deposit failed: ${errorMsg}`);
   }
 };
 
