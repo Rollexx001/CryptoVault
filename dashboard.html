@@ -509,20 +509,19 @@
                 <div class="stat-item balance-box">
                     <div style="display: flex; align-items: center; justify-content: center;">
                         <div class="stat-value" id="userBalance">$0.00</div>
-                        <button class="refresh-balance-btn" onclick="manualRefreshBalance()" title="Refresh balance">🔄</button>
                     </div>
                     <div class="stat-label">Total Balance</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">0</div>
+                    <div class="stat-value" id="totalAssets">0</div>
                     <div class="stat-label">Assets</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">+0%</div>
+                    <div class="stat-value" id="change24h">+0%</div>
                     <div class="stat-label">24h Change</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">$0.00</div>
+                    <div class="stat-value" id="totalGain">$0.00</div>
                     <div class="stat-label">Total Gain</div>
                 </div>
             </div>
@@ -677,12 +676,63 @@ onAuthStateChanged(auth, (user) => {
           console.log(`✨ Animation triggered for balance change`);
         }
         
+        // Calculate total gain from depositHistory
+        const depositHistory = userData.depositHistory || [];
+        let totalDeposits = 0;
+        
+        depositHistory.forEach(deposit => {
+          if (deposit.amount) {
+            totalDeposits += deposit.amount;
+          }
+        });
+        
+        // Update total gain display
+        const totalGainElement = document.getElementById('totalGain');
+        totalGainElement.textContent = `$${totalDeposits.toFixed(2)}`;
+        console.log(`📊 Total Gain calculated: $${totalDeposits.toFixed(2)} from ${depositHistory.length} deposits`);
+        
+        // Update total assets (number of deposits)
+        const totalAssetsElement = document.getElementById('totalAssets');
+        totalAssetsElement.textContent = depositHistory.length.toString();
+        
+        // Calculate 24h change (percentage)
+        let change24hPercent = 0;
+        if (totalDeposits > 0) {
+          const lastDayDeposits = depositHistory.filter(deposit => {
+            const depositTime = new Date(deposit.timestamp);
+            const now = new Date();
+            const hoursDiff = (now - depositTime) / (1000 * 60 * 60);
+            return hoursDiff <= 24;
+          }).reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
+          
+          change24hPercent = ((lastDayDeposits / totalDeposits) * 100).toFixed(1);
+        }
+        
+        // Update 24h change display
+        const change24hElement = document.getElementById('change24h');
+        const changeSymbol = change24hPercent >= 0 ? '+' : '';
+        change24hElement.textContent = `${changeSymbol}${change24hPercent}%`;
+        
+        // Color code: green for positive, red for negative
+        if (change24hPercent > 0) {
+          change24hElement.style.color = '#4caf50';
+        } else if (change24hPercent < 0) {
+          change24hElement.style.color = '#ff6b6b';
+        } else {
+          change24hElement.style.color = '#00d4ff';
+        }
+        
+        console.log(`📈 24h Change: ${changeSymbol}${change24hPercent}% (${depositHistory.length} total deposits)`);
+        
       } else {
         console.warn("⚠️ User document not found!");
         console.log(`   User UID: ${user.uid}`);
         console.log(`   Expected path: users/${user.uid}`);
         console.log(`   Check Firestore to ensure document exists`);
         document.getElementById('userBalance').textContent = "$0.00";
+        document.getElementById('totalGain').textContent = "$0.00";
+        document.getElementById('totalAssets').textContent = "0";
+        document.getElementById('change24h').textContent = "+0%";
       }
     }, (error) => {
       console.error("❌ Error in balance listener:", error);
@@ -696,7 +746,8 @@ onAuthStateChanged(auth, (user) => {
       try {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
-          const balance = docSnap.data().balance || 0;
+          const userData = docSnap.data();
+          const balance = userData.balance || 0;
           if (balance !== currentBalance) {
             console.log(`🔄 Periodic check detected balance change: $${currentBalance.toFixed(2)} → $${balance.toFixed(2)}`);
             const balanceElement = document.getElementById('userBalance');
@@ -710,6 +761,49 @@ onAuthStateChanged(auth, (user) => {
             setTimeout(() => {
               balanceElement.classList.remove('updating');
             }, 1500);
+            
+            // Recalculate stats
+            const depositHistory = userData.depositHistory || [];
+            let totalDeposits = 0;
+            
+            depositHistory.forEach(deposit => {
+              if (deposit.amount) {
+                totalDeposits += deposit.amount;
+              }
+            });
+            
+            // Update total gain
+            document.getElementById('totalGain').textContent = `$${totalDeposits.toFixed(2)}`;
+            
+            // Update total assets
+            document.getElementById('totalAssets').textContent = depositHistory.length.toString();
+            
+            // Calculate 24h change
+            let change24hPercent = 0;
+            if (totalDeposits > 0) {
+              const lastDayDeposits = depositHistory.filter(deposit => {
+                const depositTime = new Date(deposit.timestamp);
+                const now = new Date();
+                const hoursDiff = (now - depositTime) / (1000 * 60 * 60);
+                return hoursDiff <= 24;
+              }).reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
+              
+              change24hPercent = ((lastDayDeposits / totalDeposits) * 100).toFixed(1);
+            }
+            
+            // Update 24h change
+            const change24hElement = document.getElementById('change24h');
+            const changeSymbol = change24hPercent >= 0 ? '+' : '';
+            change24hElement.textContent = `${changeSymbol}${change24hPercent}%`;
+            
+            // Color code
+            if (change24hPercent > 0) {
+              change24hElement.style.color = '#4caf50';
+            } else if (change24hPercent < 0) {
+              change24hElement.style.color = '#ff6b6b';
+            } else {
+              change24hElement.style.color = '#00d4ff';
+            }
           }
         }
       } catch (error) {
@@ -812,6 +906,52 @@ window.manualRefreshBalance = async function() {
       if (balance !== oldBalance) {
         console.log(`✨ Balance changed from $${oldBalance.toFixed(2)} to $${balance.toFixed(2)}`);
       }
+      
+      // Recalculate stats
+      const depositHistory = userData.depositHistory || [];
+      let totalDeposits = 0;
+      
+      depositHistory.forEach(deposit => {
+        if (deposit.amount) {
+          totalDeposits += deposit.amount;
+        }
+      });
+      
+      // Update total gain
+      document.getElementById('totalGain').textContent = `$${totalDeposits.toFixed(2)}`;
+      
+      // Update total assets
+      document.getElementById('totalAssets').textContent = depositHistory.length.toString();
+      
+      // Calculate 24h change
+      let change24hPercent = 0;
+      if (totalDeposits > 0) {
+        const lastDayDeposits = depositHistory.filter(deposit => {
+          const depositTime = new Date(deposit.timestamp);
+          const now = new Date();
+          const hoursDiff = (now - depositTime) / (1000 * 60 * 60);
+          return hoursDiff <= 24;
+        }).reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
+        
+        change24hPercent = ((lastDayDeposits / totalDeposits) * 100).toFixed(1);
+      }
+      
+      // Update 24h change
+      const change24hElement = document.getElementById('change24h');
+      const changeSymbol = change24hPercent >= 0 ? '+' : '';
+      change24hElement.textContent = `${changeSymbol}${change24hPercent}%`;
+      
+      // Color code
+      if (change24hPercent > 0) {
+        change24hElement.style.color = '#4caf50';
+      } else if (change24hPercent < 0) {
+        change24hElement.style.color = '#ff6b6b';
+      } else {
+        change24hElement.style.color = '#00d4ff';
+      }
+      
+      console.log(`📊 Stats updated: Total Gain: $${totalDeposits.toFixed(2)}, Assets: ${depositHistory.length}, 24h Change: ${changeSymbol}${change24hPercent}%`);
+      
     } else {
       console.warn("⚠️ User document not found");
       alert("❌ User document not found. Please contact support.");
